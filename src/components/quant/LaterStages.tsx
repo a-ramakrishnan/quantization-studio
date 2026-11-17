@@ -10,7 +10,7 @@ const Next = ({ label, onClick }: { label: string; onClick: () => void }) => (
 
 export function Stage2({ W, cfg, result, onNext }: { W: Matrix; cfg: QuantConfig; result: QuantResult; onNext: () => void }) {
   const f = getFormat(cfg.format);
-  const err = W.map((row, r) => row.map((w, c) => result.deq[r][c] - w));
+  const err = W.map((row, r) => row.map((w, c) => result.deq[r]![c]! - w));
   return (
     <div>
       <p className="max-w-2xl text-muted-foreground">FP32 <span className="font-mono">(32 bits)</span> → <span className="font-mono text-foreground">{f.label}</span> <span className="font-mono">({f.bits} bits)</span>. Mean squared error: <span className="font-mono text-foreground">{mse(W, result.deq).toExponential(3)}</span></p>
@@ -50,7 +50,7 @@ export function Stage4({ W, result, x }: { W: Matrix; result: QuantResult; x: nu
         <table className="w-full max-w-xl font-mono text-sm">
           <thead><tr className="border-b text-left text-muted-foreground"><th className="py-2">row</th><th>y = Wx</th><th>ŷ = Ŵx</th><th>|Δ|</th></tr></thead>
           <tbody>{y.map((v, i) => (
-            <tr key={i} className="border-b border-dashed"><td className="py-2">y[{i}]</td><td>{v.toFixed(4)}</td><td>{yq[i].toFixed(4)}</td><td className="text-heat-neg">{Math.abs(v - yq[i]).toFixed(4)}</td></tr>
+            <tr key={i} className="border-b border-dashed"><td className="py-2">y[{i}]</td><td>{v.toFixed(4)}</td><td>{yq[i]!.toFixed(4)}</td><td className="text-heat-neg">{Math.abs(v - yq[i]!).toFixed(4)}</td></tr>
           ))}</tbody>
         </table>
       </div>

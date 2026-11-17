@@ -68,7 +68,7 @@ export function Stage1({ W, setW, preset, onPreset, cfg, setCfg, result, onNext,
             </div>
             <div>
               <div className="mb-2 flex justify-between text-sm"><span>Outlier Clipping (α)</span><span className="font-mono">{cfg.alpha.toFixed(2)}</span></div>
-              <Slider min={0.5} max={1} step={0.01} value={[cfg.alpha]} onValueChange={([a]) => set({ alpha: a })} />
+              <Slider min={0.5} max={1} step={0.01} value={[cfg.alpha]} onValueChange={([a]) => set({ alpha: a ?? 1 })} />
             </div>
           </div>
         )}
@@ -114,7 +114,7 @@ function OutputCard({ f, cfg, min, max, result, onNext, nextUnlocked }: {
         {f.kind === "int" && p ? (
           <>
             <Stat k="Target range" v={`[${p.qmin}, ${p.qmax}]  (${f.bits}-bit)`} />
-            <Stat k={n > 1 ? `Scale S (${n} blocks)` : "Scale (S)"} v={n > 1 ? `${fmt(Math.min(...p.scales))} … ${fmt(Math.max(...p.scales))}` : fmt(p.scales[0])} />
+            <Stat k={n > 1 ? `Scale S (${n} blocks)` : "Scale (S)"} v={n > 1 ? `${fmt(Math.min(...p.scales))} … ${fmt(Math.max(...p.scales))}` : fmt(p.scales[0]!)} />
             <Stat k="Zero-point (Z)" v={cfg.symmetric ? "0" : n > 1 ? `${Math.min(...p.zeros)} … ${Math.max(...p.zeros)}` : p.zeros[0]} />
           </>
         ) : (
