@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import { quantize, intRange } from "./quantization";
-const W = [[1, -1, 0.5, 0], [0.2, 0.3, -0.4, 2], [0, 0, 0, 0], [1, 1, 1, 1]];
+const W = [
+  [1, -1, 0.5, 0],
+  [0.2, 0.3, -0.4, 2],
+  [0, 0, 0, 0],
+  [1, 1, 1, 1],
+];
 describe("quantization", () => {
   it("INT8 symmetric range is -127..127 with Z=0", () => {
     expect(intRange(8, true)).toEqual({ qmin: -127, qmax: 127 });
