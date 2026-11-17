@@ -41,3 +41,12 @@ describe("format journey", () => {
     expect(quantRowSym([-1, 0.5, 1], 4).q).toEqual([-7, 4, 7]);
   });
 });
+import { sqnrDb, cosine } from "./quantization";
+describe("metrics", () => {
+  it("SQNR of 10:1 amplitude error is 20 dB", () => {
+    expect(sqnrDb([[1]], [[0.9]])).toBeCloseTo(20);
+  });
+  it("cosine of identical vectors is 1", () => {
+    expect(cosine([1, 2], [2, 4])).toBeCloseTo(1);
+  });
+});

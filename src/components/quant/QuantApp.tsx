@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { generatePreset, quantize } from "@/utils/quantization";
 import type { PresetId, QuantConfig } from "@/types/quantization";
 import { Stage1 } from "./Stage1";
-import { Stage4 } from "./LaterStages";
+import { Stage4 } from "./Stage4";
 import { Stage3 } from "./Stage3";
 import { Stage2 } from "./Stage2";
 
@@ -20,9 +20,8 @@ const STAGES = [
   "Weights & Calibrate",
   "Quantize & Format Journey",
   "GPU HBM & On-the-Fly Dequantize",
-  "Forward Pass (y = Wx)",
+  "Input x & Forward Pass (y = Wx vs ŷ = Ŵx)",
 ];
-const X = [1, -0.5, 0.25, 2];
 
 export function QuantApp() {
   const [dark, setDark] = useState(false);
@@ -38,6 +37,7 @@ export function QuantApp() {
   });
   const result = useMemo(() => quantize(W, cfg), [W, cfg]);
   const [sel, setSel] = useState<[number, number]>([0, 0]);
+  const [X, setX] = useState([1, -0.5, 0.25, 2]);
   const refs = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => {
@@ -189,7 +189,21 @@ export function QuantApp() {
                   onNext={() => go(4)}
                 />
               )}
-              {i === 3 && <Stage4 W={W} result={result} x={X} />}
+              {i === 3 && (
+                <Stage4
+                  W={W}
+                  cfg={cfg}
+                  result={result}
+                  x={X}
+                  setX={setX}
+                  onBack={() => go(3)}
+                  onRestart={() => {
+                    setShowAll(false);
+                    setUnlocked(1);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                />
+              )}
             </section>
           ))}
         </div>

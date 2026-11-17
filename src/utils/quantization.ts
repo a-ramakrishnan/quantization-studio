@@ -247,3 +247,18 @@ export const mae = (a: number[], b: number[]) =>
 /** GB to store `params` weights at `bits`, plus optional FP16 scale per `groupSize`. */
 export const storageGB = (params: number, bits: number, groupSize?: number) =>
   (params * bits) / 8 / 1e9 + (groupSize ? ((params / groupSize) * 2) / 1e9 : 0);
+
+/** Signal-to-quantization-noise ratio in dB: 10·log10(Σw² / Σ(w−ŵ)²). */
+export function sqnrDb(a: Matrix, b: Matrix) {
+  const fa = a.flat(),
+    fb = b.flat();
+  const sig = fa.reduce((s, v) => s + v * v, 0);
+  const noise = fa.reduce((s, v, i) => s + (v - fb[i]!) ** 2, 0);
+  return noise === 0 ? Infinity : 10 * Math.log10(sig / noise);
+}
+export function cosine(a: number[], b: number[]) {
+  const dot = a.reduce((s, v, i) => s + v * b[i]!, 0);
+  const na = Math.hypot(...a),
+    nb = Math.hypot(...b);
+  return na && nb ? dot / (na * nb) : 1;
+}
