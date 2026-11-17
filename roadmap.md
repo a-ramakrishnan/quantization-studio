@@ -1,0 +1,3 @@
+- [x] Add default Basic / Advanced header switch while preserving the advanced timeline.
+- [x] Build BF16 Q/K/V editing, format storage journey, and output comparisons.
+- [x] Test calculations and verify both modes in light/dark and on mobile.

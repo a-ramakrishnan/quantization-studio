@@ -28,3 +28,6 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+- Keep the beginner projection view separate from the advanced timeline and mounted across mode switches so each view retains its working state.
+- Basic projection calculations must delegate to the existing quantization utilities, round source weights to BF16, and report weight-payload savings separately from scale metadata so comparisons stay honest.

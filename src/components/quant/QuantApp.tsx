@@ -15,6 +15,7 @@ import { Stage1 } from "./Stage1";
 import { Stage4 } from "./Stage4";
 import { Stage3 } from "./Stage3";
 import { Stage2 } from "./Stage2";
+import { BasicMode } from "./BasicMode";
 
 const STAGES = [
   "Weights & Calibrate",
@@ -24,6 +25,7 @@ const STAGES = [
 ];
 
 export function QuantApp() {
+  const [mode, setMode] = useState<"basic" | "advanced">("basic");
   const [dark, setDark] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [unlocked, setUnlocked] = useState(1);
@@ -56,15 +58,25 @@ export function QuantApp() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-30 border-b bg-background/85 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-6 py-3">
-          <h1 className="font-serif text-lg font-medium sm:text-xl">
+        <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6">
+          <h1 className="min-w-0 font-serif text-lg font-medium sm:text-xl">
             Linear Layer Quantization &amp; GPU Execution
           </h1>
-          <div className="flex items-center gap-2">
-            <div className="hidden rounded-lg border p-0.5 text-sm sm:flex">
+          <div className="flex flex-wrap items-center gap-2">
+            <div role="group" aria-label="Experience mode" className="flex rounded-lg border p-0.5">
+              {(["basic", "advanced"] as const).map(value => (
+                <Button key={value} size="sm" variant={mode === value ? "secondary" : "ghost"} aria-pressed={mode === value} onClick={() => setMode(value)}>
+                  {value === "basic" ? "Basic" : "Advanced"}
+                </Button>
+              ))}
+            </div>
+            <div className={cn("rounded-lg border p-0.5 text-sm", mode === "advanced" ? "flex" : "hidden")}>
               {["Timeline View", "Show All"].map((l, i) => (
-                <button
+                <Button
                   key={l}
+                  variant="ghost"
+                  size="sm"
+                  aria-pressed={showAll === (i === 1)}
                   onClick={() => setShowAll(i === 1)}
                   className={cn(
                     "rounded-md px-3 py-1 transition-colors",
@@ -74,7 +86,7 @@ export function QuantApp() {
                   )}
                 >
                   {l}
-                </button>
+                </Button>
               ))}
             </div>
             <AboutDialog />
@@ -90,7 +102,8 @@ export function QuantApp() {
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-6 pb-32">
+      <div hidden={mode !== "basic"}><BasicMode /></div>
+      <main hidden={mode !== "advanced"} className="mx-auto max-w-6xl px-6 pb-32">
         <section className="py-12">
           <p className="font-mono text-sm text-primary">y = Wx</p>
           <h2 className="mt-2 max-w-3xl font-serif text-4xl leading-tight sm:text-5xl">
