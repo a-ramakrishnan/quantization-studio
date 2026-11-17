@@ -182,6 +182,10 @@
 @utility flow-dash { stroke-dasharray: 6 4; animation: flow-dash 0.8s linear infinite; }
 
 .math-theater { background: var(--theater); color: var(--theater-ink); }
+.stage-math-viewport { width: 100%; aspect-ratio: 960 / 400; }
+@media (max-width: 640px) {
+  .stage-math-viewport { aspect-ratio: 960 / 560; }
+}
 .math-theater button:hover { background: var(--theater-grid); color: var(--theater-ink); }
 .math-theater button[aria-label="Play animation"],
 .math-theater button[aria-label="Pause animation"] { background: var(--theater-gold); color: var(--theater); }

@@ -32,3 +32,4 @@ use the editor.
 - Keep the beginner projection view separate from the advanced timeline and mounted across mode switches so each view retains its working state.
 - Basic projection calculations must delegate to the existing quantization utilities, round source weights to BF16, and report weight-payload savings separately from scale metadata so comparisons stay honest.
 - Render the math walkthrough as a browser-safe SVG driven by the live Basic projection data; suspend playback while hidden and use manual chapters for reduced-motion preferences.
+- Advanced stage animations read the shared live matrix, quantization result, selected cell and input; use independent playback and suspend animation when the lesson is hidden or offscreen to avoid competing timelines.

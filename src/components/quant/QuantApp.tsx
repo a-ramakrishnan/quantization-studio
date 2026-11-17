@@ -16,6 +16,7 @@ import { Stage4 } from "./Stage4";
 import { Stage3 } from "./Stage3";
 import { Stage2 } from "./Stage2";
 import { BasicMode } from "./BasicMode";
+import { StageAnimation } from "./StageAnimation";
 
 const STAGES = [
   "Weights & Calibrate",
@@ -161,6 +162,7 @@ export function QuantApp() {
                 <span className="font-mono text-sm text-primary">0{i + 1}</span>
                 <h2 className="font-serif text-3xl">{s}</h2>
               </div>
+              <StageAnimation stage={i} W={W} cfg={cfg} result={result} x={X} selected={sel} active={mode === "advanced"} />
               {i === 0 && (
                 <Stage1
                   W={W}

@@ -3,3 +3,5 @@
 - [x] Test calculations and verify both modes in light/dark and on mobile.
 - [x] Add an animated mathematical canvas with quantization, packing, reconstruction, and output chapters.
 - [x] Connect playback to live Basic values and verify desktop/mobile and reduced motion.
+- [x] Extend the animated math walkthrough to all four Advanced stages, preserving their controls.
+- [x] Verify every stage's playback, live values, and desktop/mobile layouts.
