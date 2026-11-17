@@ -31,9 +31,9 @@ export function generatePreset(id: PresetId, seed = 7): Matrix {
       else if (id === "shifted") v = 0.8 + gauss(rnd) * 0.3;
       else if (id === "uniform") v = rnd() * 2 - 1;
       else v = (rnd() * 2 - 1) * (0.5 + rnd() * 1.5);
-      m[r][c] = r3(v);
+      m[r]![c] = r3(v);
     }
-  if (id === "outliers") { m[1][2] = 4.2; m[3][0] = -3.1; }
+  if (id === "outliers") { m[1]![2] = 4.2; m[3]![0] = -3.1; }
   return m;
 }
 
@@ -60,7 +60,7 @@ export function roundToFloat(x: number, mantissaBits: number, maxValue: number) 
 
 export function quantize(W: Matrix, cfg: QuantConfig): QuantResult {
   const f = getFormat(cfg.format);
-  const rows = W.length, cols = W[0].length;
+  const rows = W.length, cols = W[0]!.length;
   if (f.kind === "float") {
     const q = W.map((row) => row.map((x) => roundToFloat(x, f.mantissaBits!, f.maxValue!)));
     return { q, deq: q, params: null, blockOf: () => 0 };
@@ -86,7 +86,7 @@ export function quantize(W: Matrix, cfg: QuantConfig): QuantResult {
   }
   const q = W.map((row, r) => row.map((x, c) => {
     const b = blockOf(r, c);
-    return Math.max(qmin, Math.min(qmax, Math.round(x / scales[b]) + zeros[b]));
+    return Math.max(qmin, Math.min(qmax, Math.round(x / scales[b]!) + zeros[b]!));
   }));
   const deq = q.map((row, r) => row.map((v, c) => { const b = blockOf(r, c); return (v - zeros[b]!) * scales[b]!; }));
   return { q, deq, params: { scales, zeros, qmin, qmax }, blockOf };
