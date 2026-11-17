@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowLeft, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { bytesFor, cosine, getFormat, matVec, mse, sqnrDb } from "@/utils/quantization";
@@ -31,6 +32,7 @@ export function Stage4({
   onBack: () => void;
   onRestart: () => void;
 }) {
+  const [selRow, setSelRow] = useState(0);
   const f = getFormat(cfg.format);
   const y = matVec(W, x),
     yq = matVec(result.deq, x);
@@ -98,7 +100,14 @@ export function Stage4({
         </div>
         <div className="space-y-4">
           {y.map((v, i) => (
-            <div key={i} className="grid items-center gap-3 sm:grid-cols-[3rem_1fr_13rem]">
+            <button
+              type="button"
+              key={i}
+              onClick={() => setSelRow(i)}
+              className={`grid w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition sm:grid-cols-[3rem_1fr_13rem] ${
+                selRow === i ? "bg-muted/60 ring-1 ring-primary/40" : "hover:bg-muted/30"
+              }`}
+            >
               <span className="font-mono text-sm">y[{i}]</span>
               <div className="space-y-1">
                 <Bar v={v} cls="bg-heat-pos" />
@@ -110,8 +119,25 @@ export function Stage4({
                 </div>
                 <div className="text-clip">Δ = {(v - yq[i]!).toFixed(5)}</div>
               </div>
-            </div>
+            </button>
           ))}
+        </div>
+        <div className="mt-4 rounded-lg border bg-muted/40 px-4 py-3 text-xs">
+          <div className="mb-1.5 font-medium text-foreground">
+            How <span className="font-mono text-primary">y[{selRow}]</span> is computed (click any row above)
+          </div>
+          <div className="space-y-1 font-mono text-muted-foreground">
+            <div>
+              <span className="text-heat-pos">True y[{selRow}]</span> ={" "}
+              {W[selRow]!.map((w, j) => `(${w.toFixed(2)}×${x[j]!.toFixed(2)})`).join(" + ")} ={" "}
+              <b className="text-foreground">{y[selRow]!.toFixed(4)}</b>
+            </div>
+            <div>
+              <span className="text-heat-neg">Quant ŷ[{selRow}]</span> ={" "}
+              {result.deq[selRow]!.map((w, j) => `(${w.toFixed(2)}×${x[j]!.toFixed(2)})`).join(" + ")} ={" "}
+              <b className="text-foreground">{yq[selRow]!.toFixed(4)}</b>
+            </div>
+          </div>
         </div>
       </div>
 
