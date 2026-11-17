@@ -102,3 +102,57 @@ export const mse = (a: Matrix, b: Matrix) => {
   return fa.reduce((s, v, i) => s + (v - fb[i]!) ** 2, 0) / fa.length;
 };
 export const bytesFor = (n: number, bits: number) => (n * bits) / 8;
+
+/** Encode a value as raw bits for a float format (sign | exponent | mantissa). Value is rounded first. */
+export function encodeFloat(x: number, expBits: number, manBits: number, maxValue: number) {
+  const bias = 2 ** (expBits - 1) - 1;
+  const v = roundToFloat(x, manBits, maxValue);
+  const sign = v < 0 || Object.is(v, -0) ? 1 : 0;
+  const a = Math.abs(v);
+  let exp = 0, man = 0;
+  if (a > 0) {
+    let e = Math.floor(Math.log2(a));
+    if (e + bias <= 0) { exp = 0; man = Math.round(a / 2 ** (1 - bias - manBits)); }
+    else { exp = e + bias; man = Math.round((a / 2 ** e - 1) * 2 ** manBits); if (man === 2 ** manBits) { man = 0; exp++; } }
+    e = 0;
+  }
+  const bits = (sign << (expBits + manBits)) | (exp << manBits) | man;
+  const total = 1 + expBits + manBits;
+  return { sign, exp, man, bits, total, hex: "0x" + bits.toString(16).toUpperCase().padStart(Math.ceil(total / 4), "0"), binary: bits.toString(2).padStart(total, "0") };
+}
+
+export function floatBitsFor(id: FormatId, x: number) {
+  const f = getFormat(id);
+  return encodeFloat(x, f.exponentBits!, f.mantissaBits!, f.maxValue!);
+}
+
+/** Symmetric integer quantization of a 1-D row, optionally group-wise. */
+export function quantRowSym(w: number[], bits: number, groupSize = w.length) {
+  const qmax = 2 ** (bits - 1) - 1;
+  const q: number[] = [], deq: number[] = [], scales: number[] = [];
+  for (let g = 0; g < w.length; g += groupSize) {
+    const chunk = w.slice(g, g + groupSize);
+    const s = Math.max(...chunk.map(Math.abs)) / qmax || 1e-8;
+    scales.push(s);
+    chunk.forEach((x) => { const v = Math.max(-qmax, Math.min(qmax, Math.round(x / s))); q.push(v); deq.push(v * s); });
+  }
+  return { q, deq, scales };
+}
+
+export const twosComplement = (v: number, bits: number) => ((v + 2 ** bits) % 2 ** bits).toString(2).padStart(bits, "0");
+
+/** Pack pairs of 4-bit two's-complement codes into bytes: first weight → high nibble. */
+export function packNibbles(q: number[]) {
+  const out: { hi: number; lo: number; byte: number; hex: string }[] = [];
+  for (let i = 0; i < q.length; i += 2) {
+    const hi = q[i]! & 0xf, lo = (q[i + 1] ?? 0) & 0xf, byte = (hi << 4) | lo;
+    out.push({ hi, lo, byte, hex: "0x" + byte.toString(16).toUpperCase().padStart(2, "0") });
+  }
+  return out;
+}
+
+export const mae = (a: number[], b: number[]) => a.reduce((s, v, i) => s + Math.abs(v - b[i]!), 0) / a.length;
+
+/** GB to store `params` weights at `bits`, plus optional FP16 scale per `groupSize`. */
+export const storageGB = (params: number, bits: number, groupSize?: number) =>
+  (params * bits) / 8 / 1e9 + (groupSize ? (params / groupSize) * 2 / 1e9 : 0);

@@ -8,22 +8,6 @@ const Next = ({ label, onClick }: { label: string; onClick: () => void }) => (
   <Button size="lg" onClick={onClick} className="mt-6">{label} <ArrowRight className="ml-1 h-4 w-4" /></Button>
 );
 
-export function Stage2({ W, cfg, result, onNext }: { W: Matrix; cfg: QuantConfig; result: QuantResult; onNext: () => void }) {
-  const f = getFormat(cfg.format);
-  const err = W.map((row, r) => row.map((w, c) => result.deq[r]![c]! - w));
-  return (
-    <div>
-      <p className="max-w-2xl text-muted-foreground">FP32 <span className="font-mono">(32 bits)</span> → <span className="font-mono text-foreground">{f.label}</span> <span className="font-mono">({f.bits} bits)</span>. Mean squared error: <span className="font-mono text-foreground">{mse(W, result.deq).toExponential(3)}</span></p>
-      <div className="mt-6 grid gap-6 md:grid-cols-3">
-        <MatrixGrid m={W} label="FP32 W" />
-        <MatrixGrid m={result.q} label={f.kind === "int" ? `Stored codes q (${f.label})` : `Stored ${f.label} values`} format={(v) => (f.kind === "int" ? String(v) : v.toPrecision(4))} />
-        <MatrixGrid m={err} label="Error  Ŵ − W" format={(v) => v.toFixed(3)} />
-      </div>
-      <Next label="Load into GPU → Stage 3" onClick={onNext} />
-    </div>
-  );
-}
-
 export function Stage3({ cfg, result, onNext }: { cfg: QuantConfig; result: QuantResult; onNext: () => void }) {
   const f = getFormat(cfg.format);
   const n = 16, fp32 = bytesFor(n, 32), packed = bytesFor(n, f.bits), meta = (result.params?.scales.length ?? 0) * 2;

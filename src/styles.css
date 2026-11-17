@@ -95,6 +95,7 @@
   --ring: oklch(0.5 0.16 255);
   --heat-pos: oklch(0.55 0.17 255);
   --heat-neg: oklch(0.6 0.19 15);
+  --clip: oklch(0.75 0.16 70);
   --bit-sign: oklch(0.62 0.19 15);
   --bit-exp: oklch(0.6 0.14 160);
   --bit-man: oklch(0.55 0.16 255);
@@ -136,6 +137,7 @@
 @theme inline {
   --color-heat-pos: var(--heat-pos);
   --color-heat-neg: var(--heat-neg);
+  --color-clip: var(--clip);
   --color-bit-sign: var(--bit-sign);
   --color-bit-exp: var(--bit-exp);
   --color-bit-man: var(--bit-man);

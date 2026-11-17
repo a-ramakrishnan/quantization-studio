@@ -6,7 +6,8 @@ import { cn } from "@/lib/utils";
 import { generatePreset, quantize } from "@/utils/quantization";
 import type { PresetId, QuantConfig } from "@/types/quantization";
 import { Stage1 } from "./Stage1";
-import { Stage2, Stage3, Stage4 } from "./LaterStages";
+import { Stage3, Stage4 } from "./LaterStages";
+import { Stage2 } from "./Stage2";
 
 const STAGES = ["Weights & Calibrate", "Quantize & Format Journey", "GPU HBM & On-the-Fly Dequantize", "Forward Pass (y = Wx)"];
 const X = [1, -0.5, 0.25, 2];
@@ -19,6 +20,7 @@ export function QuantApp() {
   const [W, setW] = useState(() => generatePreset("normal"));
   const [cfg, setCfg] = useState<QuantConfig>({ format: "INT4", symmetric: true, granularity: "tensor", alpha: 1 });
   const result = useMemo(() => quantize(W, cfg), [W, cfg]);
+  const [sel, setSel] = useState<[number, number]>([0, 0]);
   const refs = useRef<(HTMLElement | null)[]>([]);
 
   useEffect(() => { document.documentElement.classList.toggle("dark", dark); }, [dark]);
@@ -75,7 +77,7 @@ export function QuantApp() {
                 <h2 className="font-serif text-3xl">{s}</h2>
               </div>
               {i === 0 && <Stage1 W={W} setW={setW} preset={preset} onPreset={(p) => { setPreset(p); setW(generatePreset(p)); }} cfg={cfg} setCfg={setCfg} result={result} onNext={() => go(2)} nextUnlocked={visible >= 2} />}
-              {i === 1 && <Stage2 W={W} cfg={cfg} result={result} onNext={() => go(3)} />}
+              {i === 1 && <Stage2 W={W} setW={setW} cfg={cfg} result={result} sel={sel} setSel={setSel} onEdit={() => go(1)} onBack={() => go(1)} onNext={() => go(3)} />}
               {i === 2 && <Stage3 cfg={cfg} result={result} onNext={() => go(4)} />}
               {i === 3 && <Stage4 W={W} result={result} x={X} />}
             </section>
