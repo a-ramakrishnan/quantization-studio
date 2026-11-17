@@ -282,7 +282,16 @@ function Together({
   f: ReturnType<typeof getFormat>;
 }) {
   const [sel, setSel] = useState<BlockId>("reg");
+  const [cell, setCell] = useState<[number, number]>([0, 0]);
   const err = W.map((r, i) => r.map((w, j) => w - result.deq[i]![j]!));
+  const [cr, cc] = cell;
+  const wVal = W[cr]![cc]!;
+  const qVal = result.q[cr]![cc]!;
+  const deqVal = result.deq[cr]![cc]!;
+  const errVal = err[cr]![cc]!;
+  const blk = result.blockOf(cr, cc);
+  const cellS = f.kind === "int" ? result.params!.scales[blk]! : 0;
+  const cellZ = f.kind === "int" ? result.params!.zeros[blk]! : 0;
   const Block = ({
     id,
     x,
@@ -454,11 +463,51 @@ function Together({
       <div className="grid gap-4 md:grid-cols-3">
         <MatrixGrid
           m={result.q}
+          selected={cell}
+          onSelect={(r, c) => setCell([r, c])}
           label={`W_q (${f.label})`}
           format={(v) => (f.kind === "int" ? String(v) : v.toPrecision(4))}
         />
-        <MatrixGrid m={result.deq} label="Dequantized Ŵ" />
-        <MatrixGrid m={err} label="Error (W − Ŵ)" />
+        <MatrixGrid
+          m={result.deq}
+          selected={cell}
+          onSelect={(r, c) => setCell([r, c])}
+          label="Dequantized Ŵ"
+        />
+        <MatrixGrid
+          m={err}
+          selected={cell}
+          onSelect={(r, c) => setCell([r, c])}
+          label="Error (W − Ŵ)"
+        />
+      </div>
+      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <span className="font-medium text-foreground">
+            How <span className="font-mono text-primary">W_q[{cr},{cc}]</span> dequantizes in SM registers (click any cell)
+          </span>
+        </div>
+        {f.kind === "int" ? (
+          <div className="font-mono leading-relaxed text-muted-foreground">
+            <span className="text-foreground">W_q = {qVal}</span>
+            {" "}──({qVal} − {cellZ}) × {cellS.toFixed(4)}──▶{" "}
+            <b className="text-primary">Ŵ = {deqVal.toFixed(4)}</b>
+            {" "}──Error (W − Ŵ)──▶{" "}
+            <span className="text-foreground">
+              {wVal.toFixed(4)} − {deqVal.toFixed(4)} = {errVal >= 0 ? "+" : ""}{errVal.toFixed(4)}
+            </span>
+          </div>
+        ) : (
+          <div className="font-mono leading-relaxed text-muted-foreground">
+            <span className="text-foreground">Stored {f.label}</span>
+            {" "}──up-convert to FP16──▶{" "}
+            <b className="text-primary">Ŵ = {deqVal.toFixed(4)}</b>
+            {" "}──Error──▶{" "}
+            <span className="text-foreground">
+              {wVal.toFixed(4)} − {deqVal.toFixed(4)} = {errVal >= 0 ? "+" : ""}{errVal.toFixed(4)}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

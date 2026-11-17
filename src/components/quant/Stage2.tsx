@@ -173,6 +173,35 @@ export function Stage2({
         representable range). Click any cell to inspect it below.
       </p>
 
+      {/* Inline explanation of how the selected cell changed W -> Stored */}
+      <div className="rounded-lg border bg-muted/40 px-4 py-3 text-xs">
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
+          <span className="font-medium text-foreground">
+            How <span className="font-mono text-primary">W[{sel[0]},{sel[1]}]</span> changes (1 → 2)
+          </span>
+          {info.clipped && <span className="font-mono text-clip">Clipped to range</span>}
+        </div>
+        {f.kind === "int" ? (
+          <div className="font-mono leading-relaxed text-muted-foreground">
+            <span className="text-foreground">{fx(info.w, 3)}</span>
+            {" "}──÷ S ({fx(info.S)})──▶{" "}
+            <span className="text-foreground">{(info.w / info.S).toFixed(2)}</span>
+            {" "}──round + Z ({info.Z})──▶{" "}
+            <span className="text-foreground">{info.raw}</span>
+            {" "}──clamp [{result.params!.qmin}, {result.params!.qmax}]──▶{" "}
+            <b className="text-primary">W_q = {info.wq}</b>
+          </div>
+        ) : (
+          <div className="font-mono leading-relaxed text-muted-foreground">
+            <span className="text-foreground">{fx(info.w, 4)}</span>
+            {" "}──round to {f.label} ({f.bits}-bit float)──▶{" "}
+            <b className="text-primary">
+              {f.id === "FP8" ? `${floatBitsFor("FP8", info.wq).hex} (${fx(info.deq, 4)})` : fx(info.deq, 5)}
+            </b>
+          </div>
+        )}
+      </div>
+
       {/* Breakdown */}
       <div className="grid gap-6 lg:grid-cols-[1.3fr_1fr]">
         <div className="rounded-xl border bg-card p-5 shadow-card">

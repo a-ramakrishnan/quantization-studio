@@ -8,18 +8,24 @@ import { floatBitsFor, getFormat, packNibbles } from "@/utils/quantization";
 import { MatrixGrid } from "./MatrixGrid";
 
 const NAMES = { Q: "Query", K: "Key", V: "Value" };
-const number = (value: number) => Number(value.toPrecision(7)).toString();
+const shortNum = (value: number) => Number(value.toFixed(4)).toString();
+const fullNum = (value: number) => Number(value.toPrecision(7)).toString();
 
 export function BasicMode() {
   const [matrices, setMatrices] = useState(initialProjections);
   const [x, setX] = useState([1, -0.5, 0.25, 2]);
   const [format, setFormat] = useState<BasicFormat>("INT4");
   const [selected, setSelected] = useState<ProjectionId>("Q");
+  const [cell, setCell] = useState<[number, number]>([0, 0]);
   const projections = Object.fromEntries(PROJECTIONS.map(id => [id, basicProjection(matrices[id], x, format)])) as Record<ProjectionId, ReturnType<typeof basicProjection>>;
   const current = projections[selected];
   const spec = getFormat(format);
   const description = BASIC_FORMATS.find(item => item.id === format)?.description;
   const scale = current.result.params?.scales[0];
+  const [cr, cc] = cell;
+  const srcVal = current.source[cr]?.[cc] ?? 0;
+  const qVal = current.result.q[cr]?.[cc] ?? 0;
+  const deqVal = current.result.deq[cr]?.[cc] ?? 0;
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
@@ -75,24 +81,57 @@ export function BasicMode() {
         <div className="grid items-start gap-5 lg:grid-cols-3">
           <div className="min-w-0">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium"><span className="font-mono text-primary">01</span> Source BF16 <span className="text-xs text-muted-foreground">Editable</span></div>
-            <MatrixGrid m={current.source} editable onChange={(r, c, value) => setMatrices(previous => ({ ...previous, [selected]: sourceBF16(previous[selected].map((row, i) => row.map((v, j) => i === r && j === c ? value : v))) }))} format={number} />
+            <MatrixGrid m={current.source} selected={cell} onSelect={(r, c) => setCell([r, c])} editable onChange={(r, c, value) => setMatrices(previous => ({ ...previous, [selected]: sourceBF16(previous[selected].map((row, i) => row.map((v, j) => i === r && j === c ? value : v))) }))} format={shortNum} />
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">Original 16-bit weights, before converting to {spec.label}.</p>
           </div>
           <div className="min-w-0">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium"><HardDrive className="h-4 w-4 text-primary" /> Stored in GPU HBM</div>
-            <MatrixGrid m={current.result.q} format={value => spec.kind === "int" ? String(value) : format === "FP8" ? floatBitsFor("FP8", value).hex : number(value)} />
+            <MatrixGrid m={current.result.q} selected={cell} onSelect={(r, c) => setCell([r, c])} format={value => spec.kind === "int" ? String(value) : format === "FP8" ? floatBitsFor("FP8", value).hex : shortNum(value)} />
             {format === "INT4" && <div className="mt-3">
               <p className="mb-2 text-xs text-muted-foreground">Packed bytes · row-major · first code in high nibble</p>
               <div className="grid grid-cols-4 gap-2">{packNibbles(current.result.q.flat()).map((byte, i) => <div key={i} className="rounded-md border bg-secondary py-2 text-center font-mono text-sm" title={`Weight codes ${current.result.q.flat()[i * 2]} and ${current.result.q.flat()[i * 2 + 1]}`}>{byte.hex}</div>)}</div>
             </div>}
-            <p className="mt-3 break-words font-mono text-xs leading-relaxed text-muted-foreground">{scale !== undefined ? `S = ${number(scale)} · Z = 0` : `${spec.bits}-bit floating-point values`}</p>
+            <p className="mt-3 break-words font-mono text-xs leading-relaxed text-muted-foreground">{scale !== undefined ? `S = ${fullNum(scale)} · Z = 0` : `${spec.bits}-bit floating-point values`}</p>
           </div>
           <div className="min-w-0">
             <div className="mb-3 flex items-center gap-2 text-sm font-medium"><Cpu className="h-4 w-4 text-primary" /> {spec.kind === "int" ? "Dequantized" : "Reconstructed"} in SM Registers</div>
-            <MatrixGrid m={current.result.deq} format={number} />
+            <MatrixGrid m={current.result.deq} selected={cell} onSelect={(r, c) => setCell([r, c])} format={shortNum} />
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{scale !== undefined ? "Ŵ = (q − Z) × S. Integer codes become floating-point weights for the multiply." : "Ŵ uses the stored float values for the multiply; no integer scale is needed."}</p>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Values model the format conversion; SM arithmetic and accumulation rounding are not simulated.</p>
           </div>
+        </div>
+
+        {/* How the selected cell changes across 01 -> 02 -> 03 */}
+        <div className="mt-5 rounded-lg border bg-muted/40 p-4 text-xs">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <span className="font-medium text-foreground">
+              How cell <span className="font-mono text-primary">W_{selected}[{cr},{cc}]</span> changes (click any cell above)
+            </span>
+            <span className="font-mono text-muted-foreground">
+              Error: {(srcVal - deqVal) >= 0 ? "+" : ""}{(srcVal - deqVal).toFixed(5)}
+            </span>
+          </div>
+          {scale !== undefined ? (
+            <div className="grid gap-2 font-mono sm:grid-cols-2">
+              <div className="rounded-md border bg-card px-3 py-2">
+                <span className="text-muted-foreground">01 → 02 Quantize: </span>
+                <span>{shortNum(srcVal)} ÷ {shortNum(scale)} = {(srcVal / scale).toFixed(2)} → round = </span>
+                <b className="text-primary">{qVal}</b>
+              </div>
+              <div className="rounded-md border bg-card px-3 py-2">
+                <span className="text-muted-foreground">02 → 03 Dequantize: </span>
+                <span>({qVal} − 0) × {shortNum(scale)} = </span>
+                <b className="text-primary">{deqVal.toFixed(4)}</b>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-md border bg-card px-3 py-2 font-mono">
+              <span className="text-muted-foreground">01 → 02 → 03 ({spec.label}): </span>
+              <span>{fullNum(srcVal)} → nearest {spec.bits}-bit float = </span>
+              <b className="text-primary">{fullNum(deqVal)}</b>
+              {format === "FP8" && <span className="text-muted-foreground"> ({floatBitsFor("FP8", qVal).hex})</span>}
+            </div>
+          )}
         </div>
       </section>
 
