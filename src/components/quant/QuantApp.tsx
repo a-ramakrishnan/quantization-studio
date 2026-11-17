@@ -26,7 +26,7 @@ const STAGES = [
 
 export function QuantApp() {
   const [mode, setMode] = useState<"basic" | "advanced">("basic");
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(true);
   const [showAll, setShowAll] = useState(false);
   const [unlocked, setUnlocked] = useState(1);
   const [preset, setPreset] = useState<PresetId>("normal");
@@ -102,7 +102,7 @@ export function QuantApp() {
         </div>
       </header>
 
-      <div hidden={mode !== "basic"}><BasicMode /></div>
+      <div hidden={mode !== "basic"}><BasicMode active={mode === "basic"} /></div>
       <main hidden={mode !== "advanced"} className="mx-auto max-w-6xl px-6 pb-32">
         <section className="py-12">
           <p className="font-mono text-sm text-primary">y = Wx</p>

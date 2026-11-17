@@ -6,11 +6,12 @@ import { BASIC_FORMATS, PROJECTIONS, basicProjection, initialProjections, source
 import type { BasicFormat, ProjectionId } from "@/utils/basic-quantization";
 import { floatBitsFor, getFormat, packNibbles } from "@/utils/quantization";
 import { MatrixGrid } from "./MatrixGrid";
+import { QuantizationScene } from "./QuantizationScene";
 
 const NAMES = { Q: "Query", K: "Key", V: "Value" };
 const number = (value: number) => Number(value.toPrecision(7)).toString();
 
-export function BasicMode() {
+export function BasicMode({ active = true }: { active?: boolean }) {
   const [matrices, setMatrices] = useState(initialProjections);
   const [x, setX] = useState([1, -0.5, 0.25, 2]);
   const [format, setFormat] = useState<BasicFormat>("INT4");
@@ -23,11 +24,7 @@ export function BasicMode() {
 
   return (
     <main className="mx-auto max-w-6xl px-4 pb-20 sm:px-6">
-      <section className="pt-8 pb-6 sm:pt-10">
-        <p className="font-mono text-xs text-primary">BF16 → GPU HBM → SM registers</p>
-        <h2 className="mt-2 font-serif text-3xl leading-tight sm:text-4xl">One input. Three projections. Fewer bits.</h2>
-        <p className="mt-3 max-w-2xl text-sm leading-relaxed text-muted-foreground">Follow the weights from their original values to GPU storage, then compare the Query, Key, and Value they produce.</p>
-      </section>
+      <QuantizationScene projection={current} format={format} selected={selected} active={active} />
 
       <aside className="flex items-start gap-3 rounded-lg border border-primary/20 bg-accent/40 p-4 text-sm" aria-label="Basic assumptions">
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
